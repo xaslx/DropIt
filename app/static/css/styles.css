@@ -60,9 +60,19 @@ main {
     transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
-.upload-button:hover {
-    transform: scale(1.05);
-    background-color: #444;
+
+@media (hover: hover){
+    .upload-button:hover {
+        transform: scale(1.05);
+        background-color: #444;
+    }
+}
+
+@media (hover: none){
+    .upload-button:active {
+        transform: scale(1.05);
+        background-color: #444;
+    }
 }
 
 
