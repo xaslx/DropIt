@@ -22,11 +22,40 @@
             <div class="upload-container">
                 <button class="upload-button" onclick="triggerFileInput()">Загрузить файл</button>
                 <input type="file" id="file-input" style="display: none;" onchange="uploadFile()"/>  
+                <div id="loading-message" class="loading-message" style="display: none;">
+                    Идет загрузка...
+                </div>
             </div>
+            
+            <div class="file-list">
+                {% for file in user_files %}
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-header">
+                                <h3>{{ file.filename }}</h3>
+                                <div class="file-icons">
+                                    <button class="action-button delete-button" title="Удалить"></button>
+                                    <a style="text-decoration: none;" target="_blank" href="{{ file.url }}">
+                                        <button class="action-button link-button" title="Перейти к файлу"></button>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="file-copy">
+                                <input type="text" class="file-url-input" value="{{ file.url }}" readonly/>
+                                <button class="copy-button" onclick="copyToClipboard('{{ file.url }}')">Скопировать</button>
+                            </div>
+                            <p>{{ file.upload_date.strftime('%d.%m.%Y %H:%M:%S') }}</p>
+                            <p>{{ file.content_type }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
             {% block content %}
             {% endblock %}
         </div>
     </main>
+    
     {% block scripts %}
         <script src="/static/js/base.js"></script>
     {% endblock %}
