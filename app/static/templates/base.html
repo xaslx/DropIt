@@ -21,7 +21,7 @@
         <div class="container">
             <div class="upload-container">
                 <button class="upload-button" onclick="triggerFileInput()">Загрузить файл</button>
-                <input type="file" id="file-input" style="display: none;"/>     
+                <input type="file" id="file-input" style="display: none;" onchange="uploadFile()"/>  
             </div>
             {% block content %}
             {% endblock %}
