@@ -14,9 +14,10 @@ class File(Base):
     __tablename__ = 'files'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
     url: Mapped[str] = mapped_column(unique=True)
-    title: Mapped[str]
+    filename: Mapped[str]
     upload_date: Mapped[DateTime] = mapped_column(DateTime)
+    content_type: Mapped[str]
 
     user: Mapped['User'] = relationship(back_populates='files')
