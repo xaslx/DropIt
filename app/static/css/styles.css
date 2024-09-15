@@ -130,7 +130,7 @@ main {
 /* Вывод файлов */
 /* Список файлов */
 .file-list {
-    margin-top: 20px;
+    margin-top: 40px;
 }
 
 .file-item {
@@ -277,4 +277,194 @@ main {
 
 .link-button::before {
     content: "➜";
+}
+
+/* Модальное окно */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0, 0, 0, 0.5); 
+}
+
+/* Контент модального окна */
+.modal-content {
+    background-color: #1f1f1f;
+    color: #f5f5f5;
+    margin: 15% auto; 
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+/* Кнопка закрытия окна */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* Кнопки подтверждения и отмены */
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.confirm-button, .cancel-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.confirm-button {
+    background-color: #eda64b;
+    color: #121212;
+}
+
+.cancel-button {
+    background-color: #eda64b;
+    color: #121212;
+}
+
+.cancel-button:hover {
+    background-color: #866336;
+}
+
+.confirm-button:hover {
+    background-color: #866336;
+}
+
+/* Адаптация под мобильные устройства */
+@media (max-width: 600px) {
+
+    .modal-content {
+        width: 80%;
+        margin: 40% auto;
+        padding: 15px;
+    }
+
+    .modal-content h2 {
+        font-size: 16px;
+    }
+
+    .modal-content p {
+        font-size: 14px;
+    }
+
+    .confirm-button, .cancel-button {
+        width: 40%;
+        margin-top: 10px;
+        font-size: 14px;
+    }
+
+    .close-button {
+        font-size: 24px;
+        top: 5px;
+        right: 20px;
+    }
+    .file-icons {
+        margin-left: 15px;
+    }
+}
+
+
+
+/* просмотр файла */
+/* Стили для кнопок */
+.btn-open {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary-open {
+    background-color: #eda64b;
+    color: white;
+}
+
+.btn-primary-open:hover {
+    background-color: #866336;
+}
+
+.btn-danger-open {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger-open:hover {
+    background-color: #c82333;
+}
+
+.btn-secondary-open {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary-open:hover {
+    background-color: #5a6268;
+}
+
+/* Стили для модального окна */
+.modal-open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content-open {
+    background-color: #444;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-buttons-open {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+/* Стили для контейнера и группы кнопок */
+.container-open {
+    width: 100%;
+    padding: 50px;
+}
+
+.button-group-open {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-open {
+    text-decoration: none;
+}
+
+@media only screen and (max-width: 768px) {
+    .modal-content-open {
+        padding: 15px; /* Отступы от краев */
+        font-size: 14px; /* Размер шрифта */
+        margin: 0 10px; /* Отступ от краев экрана */
+        max-width: calc(100% - 20px); /* Ограничение максимальной ширины для мобильных */
+    }
 }
