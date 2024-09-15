@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}{{ file.url }}{% endblock %}
+
+{% block main %}
+<div class="container">
+    {% block content %}
+    <div class="file-display-open" style="display: flex; flex-direction: column; align-items: center; min-height: 80vh;">
+        {% if file.content_type.startswith('image/') %}
+            <img src="{{ file_url }}" alt="{{ file.filename }}" style="max-width: 100%; height: auto;">
+        {% elif file.content_type.startswith('video/') %}
+            <video controls style="max-width: 100%; height: auto;">
+                <source src="{{ file_url }}" type="{{ file.content_type }}">
+                Your browser does not support the video tag.
+            </video>
+        {% elif file.content_type.startswith('audio/') %}
+            <audio controls style="max-width: 100%;">
+                <source src="{{ file_url }}" type="{{ file.content_type }}">
+                Your browser does not support the audio element.
+            </audio>
+        {% else %}
+            <p>Неизвестный тип файла.</p>
+        {% endif %}
+
+        <div class="button-group-open" style="margin-top: 20px;">
+            <a href="#" class="btn-open btn-primary-open" download="">Скачать файл</a>
+
+            <button class="btn-open btn-danger-open" onclick="openModal('{{ file.id }}')">Пожаловаться</button>
+        </div>
+    </div>
+    {% endblock %}
+</div>
+
+<div id="reportModal-open" class="modal-open" style="display:none;">
+    <div class="modal-content-open">
+        <p>Вы уверены, что хотите отправить жалобу?</p>
+        <p>В случае если контент нарушает правила сервиса, то файл будет удален</p>
+        <div class="modal-buttons-open">
+            <button id="confirmReport" class="btn-open btn-danger-open">Отправить жалобу</button>
+            <button onclick="closeModal()" class="btn-open btn-secondary-open">Отменить</button>
+        </div>
+    </div>
+</div>
+
+<script defer src="/static/js/file.js"></script>
+{% endblock %}
