@@ -7,6 +7,9 @@
     <title>{% block title %}DropIt{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf/notyf.min.js"></script>
+
 </head>
 <body>
     <header>
@@ -18,6 +21,7 @@
     </header>
 
     <main>
+        {% block main %}
         <div class="container">
             <div class="upload-container">
                 <button class="upload-button" onclick="triggerFileInput()">Загрузить файл</button>
@@ -26,6 +30,7 @@
                     Идет загрузка...
                 </div>
             </div>
+            <span>Файл не должен привышать 200мб.</span>
             
             <div class="file-list">
                 {% for file in user_files %}
@@ -34,7 +39,7 @@
                             <div class="file-header">
                                 <h3>{{ file.filename }}</h3>
                                 <div class="file-icons">
-                                    <button class="action-button delete-button" title="Удалить"></button>
+                                    <button class="action-button delete-button" title="Удалить" data-file-id="{{ file.id }}"></button>
                                     <a style="text-decoration: none;" target="_blank" href="{{ file.url }}">
                                         <button class="action-button link-button" title="Перейти к файлу"></button>
                                     </a>
@@ -49,11 +54,25 @@
                         </div>
                     </div>
                 {% endfor %}
+                
             </div>
             
-            {% block content %}
-            {% endblock %}
+            <div class="container">
+                {% block content %}{% endblock %}
+            </div>
         </div>
+        <div id="modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal()">&times;</span>
+                <h2>Подтверждение удаления</h2>
+                <p>Вы уверены, что хотите удалить этот файл?</p>
+                <div class="modal-actions">
+                    <button class="confirm-button" onclick="confirmDeletion()">Удалить</button>
+                    <button class="cancel-button" onclick="closeModal()">Отменить</button>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
     </main>
     
     {% block scripts %}
