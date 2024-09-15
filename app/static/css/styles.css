@@ -81,7 +81,7 @@ main {
 
 @media (max-width: 768px) {
     .container {
-        padding: 0 20px;
+        padding: 0 10px;
     }
 
     .logo {
@@ -92,7 +92,13 @@ main {
         font-size: 14px;
         padding: 8px 16px;
         margin: 0px 8px;
-        margin-right: 20px;
+        margin-right: -5px;
+    }
+    .file-list{
+        margin: 0px 10px;
+    }
+    .file-large {
+        margin: 0px 10px;
     }
 
 }
@@ -462,9 +468,76 @@ main {
 
 @media only screen and (max-width: 768px) {
     .modal-content-open {
-        padding: 15px; /* Отступы от краев */
-        font-size: 14px; /* Размер шрифта */
-        margin: 0 10px; /* Отступ от краев экрана */
-        max-width: calc(100% - 20px); /* Ограничение максимальной ширины для мобильных */
+        padding: 15px;
+        font-size: 14px;
+        margin: 0 10px;
+        max-width: calc(100% - 20px);
+    }
+}
+
+
+
+/* Пагинация */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.pagination-button {
+    background-color: #eda64b;
+    color: #444;
+    border: none;
+    padding: 5px 10px;
+    margin: 0 5px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.pagination-button.active {
+    background-color: #ff79c6;
+}
+
+.pagination-button:hover {
+    background-color: #ff79c6;
+}
+
+.pagination-ellipsis {
+    margin: 0 5px;
+    color: #f5f5f5;
+}
+
+/* Мобильная версия пагинации */
+@media (max-width: 768px) {
+    .pagination-button {
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+
+    .prev-button::before {
+        content: '←';
+        font-size: 14px;
+    }
+
+    .next-button::before {
+        content: '→';
+        font-size: 14px;
+    }
+
+    .prev-button {
+        padding: 3px 10px;
+    }
+
+    .next-button {
+        padding: 3px 10px;
+    }
+
+    .prev-button, .next-button {
+        font-size: 0;
+    }
+
+    .prev-button::before, .next-button::before {
+        font-size: 14px;
     }
 }
