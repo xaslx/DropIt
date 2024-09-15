@@ -2,39 +2,40 @@ function triggerFileInput() {
     document.getElementById('file-input').click();
 }
 
+const notyf = new Notyf({
+    duration: 1500,
+    dismissible: true,
+    position: {
+        x: 'center',
+        y: 'top'
+    },
+    types: [
+        {
+            type: 'success',
+            background: '#8BC34A',
+            icon: {
+                className: 'fas fa-check',
+                tagName: 'i',
+                text: ''
+            }
+        },
+        {
+            type: 'error',
+            background: 'red',
+            icon: {
+                className: 'fas fa-exclamation-triangle',
+                tagName: 'i',
+                text: ''
+            }
+        }
+    ]
+});
+
 function uploadFile() {
     const fileInput = document.getElementById('file-input');
     const file = fileInput.files[0];
     const loadingMessage = document.getElementById('loading-message');
 
-    const notyf = new Notyf({
-        duration: 1500,
-        dismissible: true,
-        position: {
-            x: 'center',
-            y: 'top'
-        },
-        types: [
-            {
-                type: 'success',
-                background: '#8BC34A',
-                icon: {
-                    className: 'fas fa-check',
-                    tagName: 'i',
-                    text: ''
-                }
-            },
-            {
-                type: 'error',
-                background: 'red',
-                icon: {
-                    className: 'fas fa-exclamation-triangle',
-                    tagName: 'i',
-                    text: ''
-                }
-            }
-        ]
-    });
 
     if (file) {
         const formData = new FormData();
@@ -71,7 +72,7 @@ function uploadFile() {
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
-        alert("Ссылка скопирована в буфер обмена");
+        notyf.success('Ссылка скопирована')
     }, function(err) {
         console.error('Ошибка копирования', err);
     });
@@ -93,34 +94,6 @@ function closeModal() {
 
 
 function confirmDeletion() {
-    const notyf = new Notyf({
-        duration: 1500,
-        dismissible: true,
-        position: {
-            x: 'center',
-            y: 'top'
-        },
-        types: [
-            {
-                type: 'success',
-                background: '#8BC34A',
-                icon: {
-                    className: 'fas fa-check',
-                    tagName: 'i',
-                    text: ''
-                }
-            },
-            {
-                type: 'error',
-                background: 'red',
-                icon: {
-                    className: 'fas fa-exclamation-triangle',
-                    tagName: 'i',
-                    text: ''
-                }
-            }
-        ]
-    });
     if (fileIdToDelete) {
         fetch(`${fileIdToDelete}`, {
             method: 'DELETE'
