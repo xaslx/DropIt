@@ -15,6 +15,12 @@ class UserNotFoundException(BaseException):
     detail = "Пользователь не найден"
 
 
+class FileNotFoundException(BaseException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = "Файл не найден"
+
+
+
 class NotAccessException(BaseException):
     status_code = status.HTTP_409_CONFLICT
     detail = "Недостаточно прав"
