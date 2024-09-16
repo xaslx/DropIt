@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Depends, Path, BackgroundTasks, Query
 from fastapi.responses import RedirectResponse, JSONResponse
-from app.schemas.file import FileSchema
+from app.schemas.file import FileSchema, FileSchemaOut
 from app.schemas.user import UserOut
 from app.utils.templating import get_template
 from fastapi.templating import Jinja2Templates
@@ -11,14 +11,13 @@ from database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from app.utils.S3 import s3_client
-from app.tasks.tasks import delete_file_from_s3
+from app.tasks.tasks import delete_file_from_s3, send_report, delete_file_admin
 from exceptions import NotAccessException, UserNotFoundException, FileNotFoundException
 from config import settings
 
 
 
 main_router: APIRouter = APIRouter(tags=['Главная страница'])
-
 
 
 TYPE_CONTENT: list[str] = ['video', 'audio', 'image']
@@ -60,7 +59,7 @@ async def get_main_page(
         session: Annotated[AsyncSession, Depends(get_async_session)],
     ):
     
-    file: FileSchema = await file_service.get_one(url=file_url, session=session)
+    file: FileSchemaOut = await file_service.get_one(url=file_url, session=session)
     if file:
         ip_address: str = request.client.host
         file_content: str = file.content_type.split('/')[0]
@@ -98,7 +97,7 @@ async def delete_file(
     ip_address: str = request.client.host
 
     user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
-    file: FileSchema = await file_service.get_one(id=file_id, session=session)
+    file: FileSchemaOut = await file_service.get_one(id=file_id, session=session)
 
     if not file:
         raise FileNotFoundException
@@ -106,6 +105,10 @@ async def delete_file(
     if ip_address in IP_ADMINS:
         await file_service.delete(id=file_id, session=session)
         await s3_client.delete_file(f'{file.url}_{file.filename}')
+        bg_task.add_task(
+            delete_file_admin,
+            file.id
+        )
         return JSONResponse(content={'message': 'file success deleted'}, status_code=200)
 
     if not user:
@@ -132,5 +135,11 @@ async def report_file(
         bg_task: BackgroundTasks
     ):
 
-    file: FileSchema = await file_service.get_one(session=session, id=file_id)
-    print(file)
+    file: FileSchemaOut = await file_service.get_one(session=session, id=file_id)
+
+    file_url: str = f'https://8351bc0d-6a77-4774-b115-72cfb172f518.selstorage.ru/{file.url}_{file.filename}'
+    bg_task.add_task(
+        send_report,
+        file_id=file.id,
+        file_url=file_url
+    )
