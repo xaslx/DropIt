@@ -11,5 +11,8 @@ class FileSchema(BaseModel):
     user_id: int
     content_type: str
 
-    model_config: ConfigDict = ConfigDict(from_attributes=True)
 
+class FileSchemaOut(FileSchema):
+    id: int
+
+    model_config: ConfigDict = ConfigDict(from_attributes=True)
