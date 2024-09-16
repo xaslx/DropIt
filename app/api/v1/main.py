@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, Path, BackgroundTasks, Query
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from app.schemas.file import FileSchema
 from app.schemas.user import UserOut
 from app.utils.templating import get_template
@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from app.utils.S3 import s3_client
 from app.tasks.tasks import delete_file_from_s3
-from exceptions import NotAccessException, UserNotFoundException
+from exceptions import NotAccessException, UserNotFoundException, FileNotFoundException
 from config import settings
 
 
@@ -22,6 +22,8 @@ main_router: APIRouter = APIRouter(tags=['Главная страница'])
 
 
 TYPE_CONTENT: list[str] = ['video', 'audio', 'image']
+IP_ADMINS: list[str] = settings.ip_admins.split(',')
+
 
 @main_router.get('/')
 async def get_main_page(
@@ -35,7 +37,7 @@ async def get_main_page(
     offset = (page - 1) * 15
     ip_address: str = request.client.host
     user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
-
+    total_pages = 0
     if user:
         user_files, total_count = await file_service.get_all(session=session, user_id=user.id, offset=offset)
         total_pages = (total_count + 15 - 1) // 15
@@ -44,7 +46,7 @@ async def get_main_page(
             name='base.html', 
             context={'user_files': user_files, 'current_page': page, 'total_pages': total_pages})
     
-    return template.TemplateResponse(request=request, name='base.html', context={'user_files': []})
+    return template.TemplateResponse(request=request, name='base.html', context={'user_files': [], 'total_pages': total_pages})
 
 
    
@@ -57,17 +59,26 @@ async def get_main_page(
         file_service: Annotated[FileService, Depends(get_file_service)],
         session: Annotated[AsyncSession, Depends(get_async_session)],
     ):
-
+    
     file: FileSchema = await file_service.get_one(url=file_url, session=session)
     if file:
+        ip_address: str = request.client.host
         file_content: str = file.content_type.split('/')[0]
+
         if file_content in TYPE_CONTENT:
             path: str = f'{settings.url}/{file.url}_{file.filename}'
+            is_admin: bool | None = None
+            if ip_address in IP_ADMINS:
+                is_admin = True
+            else:
+                is_admin = False
             download_url: str = await s3_client.get_file(f'{file.url}_{file.filename}')
+
             return template.TemplateResponse(request=request, name='file.html', context={
                 'file': file,
                 'file_url': path,
-                'download_url': download_url
+                'download_url': download_url,
+                'is_admin': is_admin
             })
         return RedirectResponse(f'{settings.url}/{file.url}_{file.filename}')
     return template.TemplateResponse(request=request, name='404.html')
@@ -85,14 +96,23 @@ async def delete_file(
     ):
 
     ip_address: str = request.client.host
+
     user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
+    file: FileSchema = await file_service.get_one(id=file_id, session=session)
+
+    if not file:
+        raise FileNotFoundException
+
+    if ip_address in IP_ADMINS:
+        await file_service.delete(id=file_id, session=session)
+        await s3_client.delete_file(f'{file.url}_{file.filename}')
+        return JSONResponse(content={'message': 'file success deleted'}, status_code=200)
 
     if not user:
         raise UserNotFoundException
     
-    file: FileSchema = await file_service.get_one(id=file_id, session=session)
 
-    if not file or file.user_id != user.id:
+    if file.user_id != user.id:
         raise NotAccessException
     
     await file_service.delete(id=file_id, session=session)
@@ -103,7 +123,6 @@ async def delete_file(
         filename
     )
     
-
     
 @main_router.post('/report/{file_id}')
 async def report_file(
