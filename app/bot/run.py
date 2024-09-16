@@ -10,11 +10,10 @@ from app.bot.admin_handler import admin_router
 bot: Bot = Bot(settings.bot_token_tg, default=DefaultBotProperties(parse_mode="HTML"))
 dp: Dispatcher = Dispatcher()
 web_hook: str = f"/{settings.bot_token_tg}"
-print(web_hook)
+
 
 async def set_webhook():
     webhook_url: str = f'{settings.webhook_url}{web_hook}'
-    print(webhook_url)
     await bot.set_webhook(webhook_url, allowed_updates=["callback_query", "message"])
 
 
