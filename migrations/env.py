@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.models.file import File #noqa
 from app.models.user import User #noqa
+from app.models.blacklist import BlackList #noqa
 
 from config import settings
 from database import Base
