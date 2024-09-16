@@ -31,7 +31,7 @@
                 </div>
                 
             </div>
-            <span class="file-large">Файл не должен привышать 200мб.</span>
+            <span class="file-large">Файл не должен превышать 200мб.</span>
             
             <div class="file-list">
                 {% for file in user_files %}
@@ -73,51 +73,42 @@
                 </div>
             </div>
         </div>
-        <!-- Пагинация -->
-        <!-- Пагинация -->
+ 
         {% if total_pages > 1 %}
         <div class="pagination">
-            <!-- Кнопка предыдущая -->
+        
             {% if current_page > 1 %}
                 <a href="/?page={{ current_page - 1 }}" class="pagination-button prev-button">Предыдущая</a>
             {% endif %}
 
-            <!-- Первая страница -->
+            
             <a href="/?page=1" class="pagination-button {% if current_page == 1 %}active{% endif %}">1</a>
 
-            <!-- Многоточие после первой страницы -->
+           
             {% if current_page > 4 %}
                 <span class="pagination-ellipsis">...</span>
             {% endif %}
 
-            <!-- Страницы вокруг текущей страницы -->
             {% for page_num in range(current_page - 1, current_page + 2) if page_num > 1 and page_num < total_pages %}
                 <a href="/?page={{ page_num }}" class="pagination-button {% if page_num == current_page %}active{% endif %}">
                     {{ page_num }}
                 </a>
             {% endfor %}
 
-            <!-- Многоточие перед последней страницей -->
             {% if current_page < total_pages - 3 %}
                 <span class="pagination-ellipsis">...</span>
             {% endif %}
 
-            <!-- Последняя страница -->
+
             <a href="/?page={{ total_pages }}" class="pagination-button {% if current_page == total_pages %}active{% endif %}">
                 {{ total_pages }}
             </a>
 
-            <!-- Кнопка следующая -->
             {% if current_page < total_pages %}
                 <a href="/?page={{ current_page + 1 }}" class="pagination-button next-button">Следующая</a>
             {% endif %}
         </div>
         {% endif %}
-
-                
-                
-
-                
 
         {% endblock %}
     </main>
