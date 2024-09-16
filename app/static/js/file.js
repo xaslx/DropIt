@@ -72,3 +72,20 @@ function sendReport(fileId) {
         alert('Ошибка: ' + error.message);
     });
 }
+
+function deleteFile(fileId) {
+    if (confirm('Вы уверены, что хотите удалить файл?')) {
+        fetch(`${fileId}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Файл успешно удален');
+                window.location.href = '/';
+            } else {
+                alert('Ошибка при удалении файла');
+            }
+        })
+        .catch(error => console.error('Ошибка:', error));
+    }
+}
