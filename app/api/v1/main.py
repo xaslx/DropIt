@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, Path, BackgroundTasks, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse
 from app.schemas.file import FileSchema
 from app.schemas.user import UserOut
 from app.utils.templating import get_template
@@ -20,6 +20,7 @@ from config import settings
 main_router: APIRouter = APIRouter(tags=['Главная страница'])
 
 
+
 TYPE_CONTENT: list[str] = ['video', 'audio', 'image']
 
 @main_router.get('/')
@@ -31,17 +32,17 @@ async def get_main_page(
         session: Annotated[AsyncSession, Depends(get_async_session)],
         page: Annotated[int | None, Query()] = 1,
     ):
-    offset = (page - 1) * 5
+    offset = (page - 1) * 15
     ip_address: str = request.client.host
     user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
 
     if user:
         user_files, total_count = await file_service.get_all(session=session, user_id=user.id, offset=offset)
-        total_pages = (total_count + 5 - 1) // 5
+        total_pages = (total_count + 15 - 1) // 15
         return template.TemplateResponse(
             request=request, 
             name='base.html', 
-            context={'user_files': user_files, 'current_page': page, 'total_pages': total_pages, 'min': min})
+            context={'user_files': user_files, 'current_page': page, 'total_pages': total_pages})
     
     return template.TemplateResponse(request=request, name='base.html', context={'user_files': []})
 
@@ -62,9 +63,11 @@ async def get_main_page(
         file_content: str = file.content_type.split('/')[0]
         if file_content in TYPE_CONTENT:
             path: str = f'{settings.url}/{file.url}_{file.filename}'
+            download_url: str = await s3_client.get_file(f'{file.url}_{file.filename}')
             return template.TemplateResponse(request=request, name='file.html', context={
                 'file': file,
                 'file_url': path,
+                'download_url': download_url
             })
         return RedirectResponse(f'{settings.url}/{file.url}_{file.filename}')
     return template.TemplateResponse(request=request, name='404.html')
