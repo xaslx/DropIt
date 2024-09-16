@@ -18,8 +18,8 @@ class UserService:
     async def delete(self, id: int) -> int:
         await self.repository.delete(id=id)
 
-    async def get_one(self, ip_address: str, session: AsyncSession) -> UserOut:
-        return await self.repository.find_one_or_none(ip_address=ip_address, session=session)
+    async def get_one(self, session: AsyncSession, **filter_by) -> UserOut:
+        return await self.repository.find_one_or_none(session=session, **filter_by)
  
 
 
