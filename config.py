@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
+    LOG_LEVEL: str
+
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
@@ -16,6 +17,13 @@ class Settings(BaseSettings):
     aws_secret_access_key: str
     endpoint_url: str
     url: str
+
+
+    ip_admins: str
+    id_admins_telegram: list[int]
+    bot_token_tg: str
+
+    webhook_url: str
 
     @property
     def DATABASE_URL(self):
