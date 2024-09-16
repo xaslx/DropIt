@@ -8,10 +8,10 @@ class FileRepository(SQLAlchemyRepository):
     model: File = File
 
 
-    async def find_all(self, session: AsyncSession, limit: int = 15, offset: int = 0, **filter_by):
+    async def find_all(self, session: AsyncSession, user_id: int, limit: int = 15, offset: int = 0):
         stmt_data = (
             select(self.model)
-            .filter_by(**filter_by)
+            .where(self.model.user_id == user_id)
             .order_by(desc(self.model.id))
             .offset(offset)
             .limit(limit)
@@ -21,7 +21,7 @@ class FileRepository(SQLAlchemyRepository):
 
         stmt_count = (
             select(func.count())
-            .where(self.model.user_id == User.id)
+            .where(self.model.user_id == user_id)
         )
         res_count = await session.execute(stmt_count)
         total_count = res_count.scalar()
