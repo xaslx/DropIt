@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
 from config import settings
+from logger import logger
+
 
 
 class S3Client:
@@ -38,8 +40,8 @@ class S3Client:
                     Key=file_name,
                     Body=file_path,
                 )
-        except ClientError as e:
-            raise e
+        except ClientError:
+            logger.error(f'Не удалось загрузить файл в S3 хранилище')
         
         
     async def get_file(self, object_key: str, exp: int = 3600):
@@ -51,8 +53,8 @@ class S3Client:
                         'ResponseContentDisposition': f'attachment; filename="{object_key}"'},
                     ExpiresIn=exp)
                 return presigned_url
-        except ClientError as e:
-            raise e
+        except ClientError:
+            logger.error(f'Не удалось сгенерировать ссылку для скачивания')
 
        
 
@@ -60,8 +62,8 @@ class S3Client:
         try:
             async with self.get_client() as client:
                 await client.delete_object(Bucket=self.bucket_name, Key=object_name)
-        except ClientError as e:
-            raise e
+        except ClientError:
+            logger.error(f'Не удалось удалить файл из S3 хранилище')
 
 
 def create_s3_client():
