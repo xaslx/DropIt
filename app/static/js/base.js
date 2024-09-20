@@ -128,3 +128,11 @@ document.querySelectorAll('.delete-button').forEach(button => {
         openModal(fileId);
     });
 });
+
+function openTermsModal() {
+    document.getElementById('modal-terms').style.display = 'block';
+}
+
+function closeTermsModal() {
+    document.getElementById('modal-terms').style.display = 'none';
+}
