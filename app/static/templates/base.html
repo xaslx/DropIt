@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf/notyf.min.css">
     <script src="https://cdn.jsdelivr.net/npm/notyf/notyf.min.js"></script>
+    <link rel="icon" href="/static/ic.ico" type="image/x-icon">
 
 </head>
 <body>
@@ -31,8 +32,10 @@
                 </div>
                 
             </div>
+            <a href="#" class="terms-privacy" onclick="openTermsModal()">Условия использования и конфиденциальность</a>
             <span class="file-large">Файл не должен превышать 200мб.</span>
-            
+        
+
             <div class="file-list">
                 {% for file in user_files %}
                     <div class="file-item">
@@ -62,6 +65,35 @@
                 {% block content %}{% endblock %}
             </div>
         </div>
+
+        <div id="modal-terms" class="modal-terms">
+            <div class="modal-content-terms">
+                <h2>Условия использования</h2>
+                <ul>
+                    <li><strong>1. Пользовательский контент:</strong> Мы не несем ответственности за пользовательский контент.</li>
+                    <li><strong>2. Возрастные ограничения:</strong> Этот сервис предназначен для пользователей, достигших 18-летнего возраста.</li>
+                    <li><strong>3. Обзор контента:</strong> Мы можем просматривать любой контент.</li>
+                    <li><strong>4. Запрещенный контент:</strong> Не отправляйте незаконный или вредоносный контент.</li>
+                    <li><strong>5. Ответственность:</strong> Вы несете ответственность за отправляемый вами контент и любой причиненный в результате ущерб.</li>
+                    <li><strong>6. Удаление контента:</strong> Мы можем удалить Контент в любое время, если он нарушает условия сервиса.</li>
+                    <li><strong>7. Прекращение действия:</strong> Мы можем прекратить ваш доступ в любое время.</li>
+                </ul>
+
+                <h2>Политика конфиденциальности</h2>
+                <ul>
+                    <li><strong>1. Сбор данных:</strong> Мы собираем и храним минимум данных, включая ваш IP-адрес.</li>
+                    <li><strong>2. Безопасность данных:</strong> Мы принимаем соответствующие меры для защиты ваших данных от несанкционированного доступа.</li>
+                    <li><strong>3. Права пользователя:</strong> Вы имеете право запросить информацию о своих данных и запросить их удаление.</li>
+                </ul>
+
+                <p>Использование вами Сервиса подразумевает принятие настоящих Условий и Политики конфиденциальности.</p>
+                <p>Мы оставляем за собой право вносить изменения в настоящие Условия и Политику конфиденциальности в любое время без предварительного уведомления.</p>
+                <p><strong>Обновлено:</strong> 17.09.2024</p>
+
+                <button class="confirm-button" onclick="closeTermsModal()">Подтверждаю</button>
+            </div>
+        </div>
+
         <div id="modal" class="modal" style="display: none;">
             <div class="modal-content">
                 <span class="close-button" onclick="closeModal()">&times;</span>
@@ -73,6 +105,8 @@
                 </div>
             </div>
         </div>
+
+        
  
         {% if total_pages > 1 %}
         <div class="pagination">
