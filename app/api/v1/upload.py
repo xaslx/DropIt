@@ -14,7 +14,7 @@ from exceptions import FileTooLargeException, NotAccessException
 from app.services.blacklist import BlackListService
 from app.schemas.blacklist import BlackList
 from app.tasks.tasks import add_new_file
-
+from config import settings
 
 
 
@@ -42,7 +42,6 @@ async def upload_file(
     ip_address: str = request.client.host
 
     user_in_blacklist: BlackList = await blacklist_service.get_one(ip_address=ip_address, session=session)
-
     if not user_in_blacklist:
         user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
 
@@ -59,7 +58,7 @@ async def upload_file(
         bg_task.add_task(
             add_new_file,
             output.id,
-            f'https://8351bc0d-6a77-4774-b115-72cfb172f518.selstorage.ru/{unique_filename}_{file.filename}'
+            f'{settings.url}/{unique_filename}_{file.filename}'
         )
     else:
         raise NotAccessException
