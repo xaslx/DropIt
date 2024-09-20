@@ -2,7 +2,7 @@ from app.repositories.file import FileRepository
 
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.file import FileSchema
+from app.schemas.file import FileSchema, FileSchemaOut
 
 
 class FileService:
@@ -16,8 +16,12 @@ class FileService:
     async def delete(self, id: int, session: AsyncSession) -> int:
         await self.repository.delete(id=id, session=session)
 
-    async def get_one(self, session: AsyncSession, **filter_by) -> FileSchema:
-        return await self.repository.find_one_or_none(session=session, **filter_by)
+    async def get_one(self, session: AsyncSession, **filter_by) -> FileSchemaOut:
+        res = await self.repository.find_one_or_none(session=session, **filter_by)
+        if not res:
+            return None
+        return FileSchemaOut.model_validate(res)
+        
 
     async def get_all(self, session: AsyncSession, **data) -> list[FileSchema]:
         return await self.repository.find_all(session=session, **data)
