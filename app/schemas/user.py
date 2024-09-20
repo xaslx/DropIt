@@ -6,7 +6,7 @@ class UserIn(BaseModel):
     ip_address: str
 
 
-class UserOut(BaseModel):
+class UserOut(UserIn):
     id: int
     ip_address: str
 
