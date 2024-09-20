@@ -7,9 +7,9 @@
     {% block content %}
     <div class="file-display-open" style="display: flex; flex-direction: column; align-items: center; min-height: 80vh;">
         {% if file.content_type.startswith('image/') %}
-            <img src="{{ file_url }}" alt="{{ file.filename }}" style="max-width: 100%; height: auto; max-height: 100vh;">
+            <img src="{{ file_url }}" alt="{{ file.filename }}" style="width: auto; max-width: 100%;">
         {% elif file.content_type.startswith('video/') %}
-            <video controls style="max-width: 100%; max-height: auto;">
+            <video controls style="width: auto; max-width: 100%; height: auto;">
                 <source src="{{ file_url }}" type="{{ file.content_type }}">
                 Your browser does not support the video tag.
             </video>
@@ -23,14 +23,12 @@
         {% endif %}
         <span style="text-align: left; color: #eda64b; margin-top: 15px;">Дата загрузки: {{ file.upload_date.strftime('%d.%m.%Y %H:%M') }}</span>
         <div class="button-group-open" style="margin-top: 20px;">
-            <a href="{{ download_url }}" class="btn-open btn-primary-open" download="videoplayback.mp4">Скачать файл</a>
-
+            <a href="{{ download_url }}" class="btn-open btn-primary-open" download="{{ file.filename }}">Скачать файл</a>
             <button class="btn-open btn-danger-open" onclick="openModal('{{ file.id }}')">Пожаловаться</button>
         </div>
         {% if is_admin %}
-            <button style="margin-top: 15px; position: left;" class="btn-open btn-danger-open" onclick="deleteFile('{{ file.id }}')">Удалить файл</button>
+            <button style="margin-top: 15px;" class="btn-open btn-danger-open" onclick="deleteFile('{{ file.id }}')">Удалить файл</button>
         {% endif %}
-        
     </div>
     {% endblock %}
 </div>
