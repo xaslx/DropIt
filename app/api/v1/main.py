@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Request, Depends, Path, BackgroundTasks, Query
+from fastapi import APIRouter, Request, Depends, Path, BackgroundTasks, Query, Response
 from fastapi.responses import RedirectResponse, JSONResponse
-from app.schemas.file import FileSchema, FileSchemaOut
+from app.schemas.file import FileSchemaOut
 from app.schemas.user import UserOut
 from app.utils.templating import get_template
 from fastapi.templating import Jinja2Templates
@@ -14,6 +14,8 @@ from app.utils.S3 import s3_client
 from app.tasks.tasks import delete_file_from_s3, send_report, delete_file_admin
 from exceptions import NotAccessException, UserNotFoundException, FileNotFoundException
 from config import settings
+from redis_init import redis
+
 
 
 
@@ -27,15 +29,26 @@ IP_ADMINS: list[str] = settings.ip_admins.split(',')
 @main_router.get('/')
 async def get_main_page(
         request: Request, 
+        response: Response,
         template: Annotated[Jinja2Templates, Depends(get_template)],
         user_service: Annotated[UserService, Depends(get_user_service)],
         file_service: Annotated[FileService, Depends(get_file_service)],
         session: Annotated[AsyncSession, Depends(get_async_session)],
         page: Annotated[int | None, Query()] = 1,
     ):
-    offset = (page - 1) * 15
     ip_address: str = request.client.host
-    user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
+    offset = (page - 1) * 15
+    user: UserOut | None = None
+    cached_data_user: None | str = await redis.get(ip_address)
+
+    if not cached_data_user:
+        user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
+        if user:
+            await redis.set(ip_address, user.id, ex=86400)
+    else:
+        user: UserOut = UserOut(id=int(cached_data_user), ip_address=ip_address)
+
+
     total_pages = 0
     if user:
         user_files, total_count = await file_service.get_all(session=session, user_id=user.id, offset=offset)
@@ -58,8 +71,17 @@ async def get_main_page(
         file_service: Annotated[FileService, Depends(get_file_service)],
         session: Annotated[AsyncSession, Depends(get_async_session)],
     ):
-    
-    file: FileSchemaOut = await file_service.get_one(url=file_url, session=session)
+    cached_data = await redis.get(name=file_url)
+
+    if not cached_data:
+        file: FileSchemaOut | None = await file_service.get_one(url=file_url, session=session)
+        if file:
+            file_json = file.model_dump_json()
+            await redis.set(name=file_url, value=file_json, ex=3600)
+    else:
+        file: FileSchemaOut = FileSchemaOut.model_validate_json(cached_data)
+
+ 
     if file:
         ip_address: str = request.client.host
         file_content: str = file.content_type.split('/')[0]
@@ -137,7 +159,7 @@ async def report_file(
 
     file: FileSchemaOut = await file_service.get_one(session=session, id=file_id)
 
-    file_url: str = f'https://8351bc0d-6a77-4774-b115-72cfb172f518.selstorage.ru/{file.url}_{file.filename}'
+    file_url: str = f'{settings.url}/{file.url}_{file.filename}'
     bg_task.add_task(
         send_report,
         file_id=file.id,
