@@ -152,11 +152,14 @@ async def report_file(
         bg_task: BackgroundTasks
     ):
 
-    file: FileSchemaOut = await file_service.get_one(id=file_id)
+    file: FileSchemaOut | None = await file_service.get_one(id=file_id)
 
-    file_url: str = f'{settings.url}/{file.url}_{file.filename}'
-    bg_task.add_task(
-        send_report,
-        file_id=file.id,
-        file_url=file_url
-    )
+    if file:
+        file_url: str = f'{settings.url}/{file.url}_{file.filename}'
+        bg_task.add_task(
+            send_report,
+            file_id=file.id,
+            file_url=file_url
+        )
+    else:
+        raise FileNotFoundException
