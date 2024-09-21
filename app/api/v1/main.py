@@ -7,8 +7,6 @@ from fastapi.templating import Jinja2Templates
 from app.services.file import FileService
 from app.services.dependencies import get_file_service, get_user_service
 from app.services.user import UserService
-from database import get_async_session
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from app.utils.S3 import s3_client
 from app.tasks.tasks import delete_file_from_s3, send_report, delete_file_admin
@@ -29,20 +27,20 @@ IP_ADMINS: list[str] = settings.ip_admins.split(',')
 @main_router.get('/')
 async def get_main_page(
         request: Request, 
-        response: Response,
         template: Annotated[Jinja2Templates, Depends(get_template)],
         user_service: Annotated[UserService, Depends(get_user_service)],
         file_service: Annotated[FileService, Depends(get_file_service)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
         page: Annotated[int | None, Query()] = 1,
     ):
+
+
     ip_address: str = request.client.host
     offset = (page - 1) * 15
     user: UserOut | None = None
     cached_data_user: None | str = await redis.get(ip_address)
 
     if not cached_data_user:
-        user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
+        user: UserOut = await user_service.get_one(ip_address=ip_address)
         if user:
             await redis.set(ip_address, user.id, ex=86400)
     else:
@@ -51,7 +49,7 @@ async def get_main_page(
 
     total_pages = 0
     if user:
-        user_files, total_count = await file_service.get_all(session=session, user_id=user.id, offset=offset)
+        user_files, total_count = await file_service.get_all(user_id=user.id, offset=offset)
         total_pages = (total_count + 15 - 1) // 15
         return template.TemplateResponse(
             request=request, 
@@ -69,12 +67,10 @@ async def get_main_page(
         file_url: Annotated[str, Path()],
         template: Annotated[Jinja2Templates, Depends(get_template)],
         file_service: Annotated[FileService, Depends(get_file_service)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
     ):
     cached_data = await redis.get(name=file_url)
-
     if not cached_data:
-        file: FileSchemaOut | None = await file_service.get_one(url=file_url, session=session)
+        file: FileSchemaOut | None = await file_service.get_one(url=file_url)
         if file:
             file_json = file.model_dump_json()
             await redis.set(name=file_url, value=file_json, ex=3600)
@@ -112,25 +108,25 @@ async def delete_file(
         file_id: Annotated[int, Path()],
         user_service: Annotated[UserService, Depends(get_user_service)],
         file_service: Annotated[FileService, Depends(get_file_service)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
         bg_task: BackgroundTasks
     ):
 
     ip_address: str = request.client.host
 
-    user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
-    file: FileSchemaOut = await file_service.get_one(id=file_id, session=session)
+    user: UserOut = await user_service.get_one(ip_address=ip_address)
+    file: FileSchemaOut = await file_service.get_one(id=file_id)
 
     if not file:
         raise FileNotFoundException
 
     if ip_address in IP_ADMINS:
-        await file_service.delete(id=file_id, session=session)
+        await file_service.delete(id=file_id)
         await s3_client.delete_file(f'{file.url}_{file.filename}')
         bg_task.add_task(
             delete_file_admin,
             file.id
         )
+        await redis.delete(file.url)
         return JSONResponse(content={'message': 'file success deleted'}, status_code=200)
 
     if not user:
@@ -140,8 +136,8 @@ async def delete_file(
     if file.user_id != user.id:
         raise NotAccessException
     
-    await file_service.delete(id=file_id, session=session)
-
+    await file_service.delete(id=file_id)
+    await redis.delete(file.url)
     filename: str = f'{file.url}_{file.filename}'
     bg_task.add_task(
         delete_file_from_s3,
@@ -153,11 +149,10 @@ async def delete_file(
 async def report_file(
         file_id: Annotated[int, Path()],
         file_service: Annotated[FileService, Depends(get_file_service)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
         bg_task: BackgroundTasks
     ):
 
-    file: FileSchemaOut = await file_service.get_one(session=session, id=file_id)
+    file: FileSchemaOut = await file_service.get_one(id=file_id)
 
     file_url: str = f'{settings.url}/{file.url}_{file.filename}'
     bg_task.add_task(
