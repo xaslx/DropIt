@@ -5,8 +5,6 @@ from app.services.user import UserService
 from app.services.file import FileService
 import secrets
 from app.services.dependencies import get_user_service, get_file_service, get_blacklist_service
-from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_async_session
 from app.schemas.file import FileSchema, FileSchemaOut
 from datetime import datetime
 from app.utils.S3 import s3_client
@@ -32,28 +30,32 @@ async def upload_file(
         user_service: Annotated[UserService, Depends(get_user_service)], 
         file_service: Annotated[FileService, Depends(get_file_service)],
         blacklist_service: Annotated[BlackListService, Depends(get_blacklist_service)],
-        session: Annotated[AsyncSession, Depends(get_async_session)],
         bg_task: BackgroundTasks
     ):
-
     if file.size > 210000000:
         raise FileTooLargeException
     
     ip_address: str = request.client.host
 
-    user_in_blacklist: BlackList = await blacklist_service.get_one(ip_address=ip_address, session=session)
+    user_in_blacklist: BlackList = await blacklist_service.get_one(ip_address=ip_address)
     if not user_in_blacklist:
-        user: UserOut = await user_service.get_one(ip_address=ip_address, session=session)
+        user: UserOut = await user_service.get_one(ip_address=ip_address)
 
         if not user:
             new_user: UserIn = UserIn(ip_address=ip_address)
-            user: UserOut = await user_service.create(session=session, **new_user.model_dump())
+            user: UserOut = await user_service.create(**new_user.model_dump())
 
         unique_filename: str = secrets.token_urlsafe(4)
         current_datetime: datetime = datetime.now()
-        new_file: FileSchemaOut = FileSchema(filename=file.filename, url=unique_filename, upload_date=current_datetime, user_id=user.id, content_type=file.content_type)
+        new_file: FileSchemaOut = FileSchema(
+            filename=file.filename, 
+            url=unique_filename, 
+            upload_date=current_datetime, 
+            user_id=user.id, 
+            content_type=file.content_type
+        )
         
-        output: FileSchemaOut = await file_service.create(session=session, **new_file.model_dump())
+        output: FileSchemaOut = await file_service.create(**new_file.model_dump())
         await s3_client.upload_file(file.file, f'{unique_filename}_{file.filename}')
         bg_task.add_task(
             add_new_file,
