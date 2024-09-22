@@ -9,6 +9,14 @@ readme = "README.md"
 python = "^3.12"
 alembic = "^1.13.2"
 fastapi = {extras = ["all"], version = "^0.114.1"}
+asyncpg = "^0.29.0"
+aiohttp = "^3.10.5"
+aiofile = "^3.8.8"
+httpx = "^0.27.2"
+aiobotocore = "^2.15.0"
+aiogram = "^3.13.0"
+python-json-logger = "^2.0.7"
+redis = "^5.0.8"
 
 
 [build-system]
