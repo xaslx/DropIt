@@ -36,10 +36,10 @@ async def upload_file(
         raise FileTooLargeException
     
     ip_address: str = request.client.host
-
     user_in_blacklist: BlackList = await blacklist_service.get_one(ip_address=ip_address)
+    
     if not user_in_blacklist:
-        user: UserOut = await user_service.get_one(ip_address=ip_address)
+        user: UserOut = await user_service.get_user(ip_address=ip_address)
 
         if not user:
             new_user: UserIn = UserIn(ip_address=ip_address)

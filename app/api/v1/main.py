@@ -5,7 +5,7 @@ from app.schemas.user import UserOut
 from app.utils.templating import get_template
 from fastapi.templating import Jinja2Templates
 from app.services.file import FileService
-from app.services.dependencies import get_file_service, get_user_service
+from app.services.dependencies import get_file_service, get_user_service, get_async_redis
 from app.services.user import UserService
 from typing import Annotated
 from app.utils.S3 import s3_client
@@ -13,8 +13,7 @@ from app.tasks.tasks import delete_file_from_s3, send_report, delete_file_admin
 from exceptions import NotAccessException, UserNotFoundException, FileNotFoundException
 from config import settings
 from redis_init import redis
-
-
+from redis.asyncio import Redis
 
 
 main_router: APIRouter = APIRouter(tags=['Главная страница'])
@@ -35,22 +34,14 @@ async def get_main_page(
 
 
     ip_address: str = request.client.host
-    offset = (page - 1) * 15
-    user: UserOut | None = None
-    cached_data_user: None | str = await redis.get(ip_address)
-
-    if not cached_data_user:
-        user: UserOut = await user_service.get_one(ip_address=ip_address)
-        if user:
-            await redis.set(ip_address, user.id, ex=86400)
-    else:
-        user: UserOut = UserOut(id=int(cached_data_user), ip_address=ip_address)
-
-
-    total_pages = 0
+    user: UserOut | None = await user_service.get_user(ip_address=ip_address)
+    total_pages: int = 0
+    
     if user:
+        offset: int = (page - 1) * 15
         user_files, total_count = await file_service.get_all(user_id=user.id, offset=offset)
-        total_pages = (total_count + 15 - 1) // 15
+        total_pages: int = (total_count + 15 - 1) // 15
+
         return template.TemplateResponse(
             request=request, 
             name='base.html', 
@@ -68,16 +59,9 @@ async def get_main_page(
         template: Annotated[Jinja2Templates, Depends(get_template)],
         file_service: Annotated[FileService, Depends(get_file_service)],
     ):
-    cached_data = await redis.get(name=file_url)
-    if not cached_data:
-        file: FileSchemaOut | None = await file_service.get_one(url=file_url)
-        if file:
-            file_json = file.model_dump_json()
-            await redis.set(name=file_url, value=file_json, ex=3600)
-    else:
-        file: FileSchemaOut = FileSchemaOut.model_validate_json(cached_data)
 
- 
+    file = await file_service.get_one_with_cache(file_url)
+
     if file:
         ip_address: str = request.client.host
         file_content: str = file.content_type.split('/')[0]
@@ -108,12 +92,13 @@ async def delete_file(
         file_id: Annotated[int, Path()],
         user_service: Annotated[UserService, Depends(get_user_service)],
         file_service: Annotated[FileService, Depends(get_file_service)],
+        redis: Annotated[Redis, Depends(get_async_redis)],
         bg_task: BackgroundTasks
     ):
 
     ip_address: str = request.client.host
 
-    user: UserOut = await user_service.get_one(ip_address=ip_address)
+    user: UserOut = await user_service.get_user(ip_address=ip_address)
     file: FileSchemaOut = await file_service.get_one(id=file_id)
 
     if not file:
