@@ -7,8 +7,6 @@ from logger import logger
 from contextlib import asynccontextmanager
 from config import settings
 from app.bot.run import handle_web_hook
-from redis_init import redis
-from app.bot.run import dp
 
 
 @asynccontextmanager
@@ -16,7 +14,6 @@ async def lifespan(app: FastAPI):
     await on_startup()
     logger.info("Fastapi приложение и Бот запущены")
     yield
-    await redis.close()
 
 
 app: FastAPI = FastAPI(lifespan=lifespan)
