@@ -12,7 +12,6 @@ from app.utils.S3 import s3_client
 from app.tasks.tasks import delete_file_from_s3, send_report, delete_file_admin
 from exceptions import NotAccessException, UserNotFoundException, FileNotFoundException
 from config import settings
-from redis_init import redis
 from redis.asyncio import Redis
 
 
