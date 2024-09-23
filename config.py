@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
 
     ip_admins: str
-    id_admins_telegram: list[int]
+    id_admins_telegram: int
     bot_token_tg: str
 
     webhook_url: str
