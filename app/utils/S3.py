@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
+from fastapi import HTTPException
 from config import settings
 from logger import logger
 
@@ -40,8 +41,9 @@ class S3Client:
                     Key=file_name,
                     Body=file_path,
                 )
-        except ClientError:
-            logger.error(f'Не удалось загрузить файл в S3 хранилище')
+        except ClientError as e:
+            logger.error(f'Не удалось загрузить файл в S3 хранилище: {e}')
+            raise HTTPException(status_code=500, detail=str(e))
         
         
     async def get_file(self, object_key: str, exp: int = 3600):
