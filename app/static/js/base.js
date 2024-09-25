@@ -31,13 +31,20 @@ const notyf = new Notyf({
     ]
 });
 
+
 function uploadFile() {
     const fileInput = document.getElementById('file-input');
     const file = fileInput.files[0];
     const loadingMessage = document.getElementById('loading-message');
 
+    const maxFileSize = 100 * 1024 * 1024;
 
     if (file) {
+        if (file.size > maxFileSize) {
+            notyf.error('Файл слишком большой. Максимальный размер: 100 МБ.');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
 
@@ -49,19 +56,15 @@ function uploadFile() {
         }).then(response => {
             loadingMessage.style.display = 'none';
             if (response.ok) {
-       
                 notyf.success('Файл успешно загружен!');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
             } else if (response.status === 413) {
-             
-                notyf.error('Ошибка: Файл слишком большой.');
-            } else if (response.status = 409) {
-                notyf.error('Вы не можете загружать файлы, так как вы заблокированы.')
-            
+                notyf.error('Файл слишком большой.');
+            } else if (response.status === 409) {
+                notyf.error('Вы не можете загружать файлы, так как вы заблокированы.');
             } else {
-              
                 notyf.error('Ошибка при загрузке файла.');
             }
         }).catch(error => {
@@ -73,9 +76,11 @@ function uploadFile() {
 }
 
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        notyf.success('Ссылка скопирована')
+function copyToClipboard(inputId) {
+    var input = document.getElementById(inputId);
+    
+    navigator.clipboard.writeText(input.value).then(function() {
+        notyf.success('Ссылка скопирована');
     }, function(err) {
         console.error('Ошибка копирования', err);
     });

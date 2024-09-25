@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}Drop Fun{% endblock %}</title>
+    <title>{% block title %}Drop{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf/notyf.min.css">
@@ -16,7 +16,7 @@
     <header>
         <div class="container">
             <div class="logo">
-                <a href="/">Drop Fun</a>
+                <a href="/">Drop</a>
             </div>
         </div>
     </header>
@@ -33,7 +33,7 @@
                 
             </div>
             <a href="#" class="terms-privacy" onclick="openTermsModal()">Условия использования и конфиденциальность</a>
-            <span class="file-large">Файл не должен превышать 200мб.</span>
+            <span class="file-large">Файл не должен превышать 100мб.</span>
         
 
             <div class="file-list">
@@ -50,8 +50,9 @@
                                 </div>
                             </div>
                             <div class="file-copy">
-                                <input type="text" class="file-url-input" value="{{ file.url }}" readonly/>
-                                <button class="copy-button" onclick="copyToClipboard('{{ file.url }}')">Скопировать</button>
+                                <input type="text" class="file-url-input" id="file-url-{{ file.name }}" value="https://dropfun.space/{{ file.url }}" readonly />
+                                <button class="copy-button" onclick="copyToClipboard('file-url-{{ file.name }}')">Скопировать</button>
+
                             </div>
                             <p>{{ file.upload_date.strftime('%d.%m.%Y %H:%M:%S') }}</p>
                             <p>{{ file.content_type }}</p>
