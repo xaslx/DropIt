@@ -7,7 +7,7 @@ from config import settings
 class AdminProtect(Filter):
 
     def __init__(self):
-        self.admins: list[int] = settings.id_admins_telegram
+        self.admins: int = settings.id_admins_telegram
 
     async def __call__(self, message: Message):
-        return message.from_user.id in self.admins
+        return message.from_user.id == self.admins
