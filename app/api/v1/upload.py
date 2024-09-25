@@ -15,7 +15,6 @@ from app.tasks.tasks import add_new_file
 from config import settings
 
 
-
 upload_router: APIRouter = APIRouter(
     prefix='/upload',
     tags=['Загрузка файла']
@@ -32,7 +31,7 @@ async def upload_file(
         blacklist_service: Annotated[BlackListService, Depends(get_blacklist_service)],
         bg_task: BackgroundTasks
     ):
-    if file.size > 210000000:
+    if file.size > 110000000:
         raise FileTooLargeException
     
     ip_address: str = request.client.host
@@ -54,9 +53,9 @@ async def upload_file(
             user_id=user.id, 
             content_type=file.content_type
         )
-        
+        file_content = await file.read()
         output: FileSchemaOut = await file_service.create(**new_file.model_dump())
-        await s3_client.upload_file(file.file, f'{unique_filename}_{file.filename}')
+        await s3_client.upload_file(file_content, f'{unique_filename}_{file.filename}')
         bg_task.add_task(
             add_new_file,
             output.id,
