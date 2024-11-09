@@ -13,14 +13,14 @@ async def delete_file_from_s3(filename: str):
     await s3_client.delete_file(object_name=filename)
 
 
-async def send_report(file_id: int, file_url: str):
+async def new_error(text: str):
     await bot.send_message(
         chat_id=settings.id_admins_telegram,
         text=
-        '❗️ #репорт\n\n'
-        f'file_id: {file_id}\n\n'
-        f'file_url: {file_url}'
+        f'Ошибка: {text}'
     )
+
+
 
 
 async def add_new_file(file_id: int, file_url: str):
