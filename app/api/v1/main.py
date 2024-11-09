@@ -62,23 +62,16 @@ async def get_main_page(
     file = await file_service.get_one_with_cache(file_url)
 
     if file:
-        ip_address: str = request.client.host
         file_content: str = file.content_type.split('/')[0]
 
         if file_content in TYPE_CONTENT:
             path: str = f'{settings.url}/{file.url}_{file.filename}'
-            is_admin: bool | None = None
-            if ip_address in IP_ADMINS:
-                is_admin = True
-            else:
-                is_admin = False
             download_url: str = await s3_client.get_file(f'{file.url}_{file.filename}')
 
             return template.TemplateResponse(request=request, name='file.html', context={
                 'file': file,
                 'file_url': path,
                 'download_url': download_url,
-                'is_admin': is_admin
             })
         return RedirectResponse(f'{settings.url}/{file.url}_{file.filename}')
     return template.TemplateResponse(request=request, name='404.html')
@@ -103,20 +96,9 @@ async def delete_file(
     if not file:
         raise FileNotFoundException
 
-    if ip_address in IP_ADMINS:
-        await file_service.delete(id=file_id)
-        await s3_client.delete_file(f'{file.url}_{file.filename}')
-        bg_task.add_task(
-            delete_file_admin,
-            file.id
-        )
-        await redis.delete(file.url)
-        return JSONResponse(content={'message': 'file success deleted'}, status_code=200)
-
     if not user:
         raise UserNotFoundException
     
-
     if file.user_id != user.id:
         raise NotAccessException
     
@@ -129,21 +111,21 @@ async def delete_file(
     )
     
     
-@main_router.post('/report/{file_id}')
-async def report_file(
-        file_id: Annotated[int, Path()],
-        file_service: Annotated[FileService, Depends(get_file_service)],
-        bg_task: BackgroundTasks
-    ):
+# @main_router.post('/report/{file_id}')
+# async def report_file(
+#         file_id: Annotated[int, Path()],
+#         file_service: Annotated[FileService, Depends(get_file_service)],
+#         bg_task: BackgroundTasks
+#     ):
 
-    file: FileSchemaOut | None = await file_service.get_one(id=file_id)
+#     file: FileSchemaOut | None = await file_service.get_one(id=file_id)
 
-    if file:
-        file_url: str = f'{settings.url}/{file.url}_{file.filename}'
-        bg_task.add_task(
-            send_report,
-            file_id=file.id,
-            file_url=file_url
-        )
-    else:
-        raise FileNotFoundException
+#     if file:
+#         file_url: str = f'{settings.url}/{file.url}_{file.filename}'
+#         bg_task.add_task(
+#             send_report,
+#             file_id=file.id,
+#             file_url=file_url
+#         )
+#     else:
+#         raise FileNotFoundException

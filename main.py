@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from app.api.v1.main import main_router
 from app.api.v1.upload import upload_router
 from fastapi.staticfiles import StaticFiles
-from app.bot.run import on_startup
+from app.bot.run import on_startup, on_shutdown
 from logger import logger
 from contextlib import asynccontextmanager
 from config import settings
@@ -19,6 +19,7 @@ async def lifespan(app: FastAPI):
     await on_startup()
     logger.info("Fastapi приложение и Бот запущены")
     yield
+    await on_shutdown()
 
 
 app: FastAPI = FastAPI(
