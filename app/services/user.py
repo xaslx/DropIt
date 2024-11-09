@@ -11,27 +11,26 @@ class UserService:
         self.repository = repository
         self.redis = redis
 
-    async def create(self, ip_address: str) -> UserOut:
-        return await self.repository.add(ip_address=ip_address)
+    async def create(self, cookie_uuid: str) -> UserOut:
+        return await self.repository.add(cookie_uuid=cookie_uuid)
 
     async def delete(self, id: int) -> int:
         await self.repository.delete(id=id)
 
 
-    async def get_user(self, ip_address: str) -> None | UserOut:
+    async def get_user(self, cookie_uuid: str) -> None | UserOut:
         if self.redis:
             try:
-                cached_data_user: None | str = await self.redis.get(ip_address)
+                cached_data_user: None | str = await self.redis.get(cookie_uuid)
                 if cached_data_user:
-                    return UserOut(id=int(cached_data_user), ip_address=ip_address)
+                    return UserOut(id=int(cached_data_user), cookie_uuid=cookie_uuid)
             except RedisError:
                 logger.error('Ошибка получения кэша')
 
-        user: UserOut | None = await self.repository.find_one_or_none(ip_address=ip_address)
-
+        user: UserOut | None = await self.repository.find_one_or_none(cookie_uuid=cookie_uuid)
         if user and self.redis:
             try:
-                await self.redis.set(ip_address, user.id, ex=86400)
+                await self.redis.set(cookie_uuid, user.id, ex=86400)
             except RedisError:
                 logger.error('Не удалось добавить пользователя в кэш')
 
