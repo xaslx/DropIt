@@ -24,55 +24,6 @@ function closeModal() {
 }
 
 
-
-function sendReport(fileId) {
-    const notyf = new Notyf({
-        duration: 2000,
-        dismissible: true,
-        position: {
-            x: 'center',
-            y: 'top'
-        },
-        types: [
-            {
-                type: 'success',
-                background: '#8BC34A',
-                icon: {
-                    className: 'fas fa-check',
-                    tagName: 'i',
-                    text: ''
-                }
-            },
-            {
-                type: 'error',
-                background: 'red',
-                icon: {
-                    className: 'fas fa-exclamation-triangle',
-                    tagName: 'i',
-                    text: ''
-                }
-            }
-        ]
-    });
-    fetch(`/report/${fileId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-    })
-    .then(response => {
-        if (response.ok) {
-            notyf.success('Жалоба успешно отправлена.')
-            closeModal();
-        } else {
-            notyf.error('Не удалось отправить жалобу')
-        }
-    })
-    .catch(error => {
-        alert('Ошибка: ' + error.message);
-    });
-}
-
 function deleteFile(fileId) {
     if (confirm('Вы уверены, что хотите удалить файл?')) {
         fetch(`${fileId}`, {

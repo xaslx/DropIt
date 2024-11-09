@@ -59,6 +59,8 @@ function uploadFile() {
                 window.location.reload();
             } else if (response.status === 413) {
                 notyf.error('Файл слишком большой.');
+            } else if (response.status === 400) {
+                notyf.error('Перезагрузите страницу, и попробуйте снова.');
             } else if (response.status === 409) {
                 notyf.error('Вы не можете загружать файлы, так как вы заблокированы.');
             } else {
