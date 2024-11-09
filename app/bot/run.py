@@ -22,6 +22,10 @@ async def on_startup():
     await set_webhook()
 
 
+async def on_shutdown():
+    await bot.session.close()
+
+
 async def handle_web_hook(request: Request):
     url: str = str(request.url)
     index: str = url.rfind("/")
@@ -39,4 +43,5 @@ async def handle_web_hook(request: Request):
 
 
 dp.startup.register(on_startup)
+dp.shutdown.register(on_shutdown)
 dp.include_router(admin_router)
