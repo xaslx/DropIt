@@ -36,7 +36,6 @@ function uploadFile() {
     const fileInput = document.getElementById('file-input');
     const file = fileInput.files[0];
     const loadingMessage = document.getElementById('loading-message');
-
     const maxFileSize = 100 * 1024 * 1024;
 
     if (file) {
@@ -47,7 +46,6 @@ function uploadFile() {
 
         const formData = new FormData();
         formData.append('file', file);
-
         loadingMessage.style.display = 'block';
 
         fetch('/upload', {
@@ -56,10 +54,9 @@ function uploadFile() {
         }).then(response => {
             loadingMessage.style.display = 'none';
             if (response.ok) {
-                notyf.success('Файл успешно загружен!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                sessionStorage.setItem('notification', 'success');
+                sessionStorage.setItem('message', 'Файл успешно загружен!');
+                window.location.reload();
             } else if (response.status === 413) {
                 notyf.error('Файл слишком большой.');
             } else if (response.status === 409) {
@@ -74,6 +71,24 @@ function uploadFile() {
         });
     }
 }
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const notification = sessionStorage.getItem('notification');
+    const message = sessionStorage.getItem('message');
+
+    if (notification && message) {
+        if (notification === 'success') {
+            notyf.success(message);
+        } else if (notification === 'error') {
+            notyf.error(message);
+        }
+        sessionStorage.removeItem('notification');
+        sessionStorage.removeItem('message');
+    }
+});
+
+
 
 
 function copyToClipboard(inputId) {
@@ -108,12 +123,12 @@ function confirmDeletion() {
         })
         .then(response => {
             if (response.ok) {
-       
-                notyf.success('Файл был успешно удален.');
+                
+                sessionStorage.setItem('notification', 'success');
+                sessionStorage.setItem('message', 'Файл был успешно удален.');
+                
                 closeModal();
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+                window.location.reload();
             } else {
        
                 notyf.error('Ошибка при удалении файла.');
