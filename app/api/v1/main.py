@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends, Path, BackgroundTasks, Query, Response
 from fastapi.responses import RedirectResponse, JSONResponse
 from app.schemas.file import FileSchemaOut
-from app.schemas.user import UserOut
+from app.schemas.user import UserIn, UserOut
 from app.utils.templating import get_template
 from fastapi.templating import Jinja2Templates
 from app.services.file import FileService
@@ -9,22 +9,25 @@ from app.services.dependencies import get_file_service, get_user_service, get_as
 from app.services.user import UserService
 from typing import Annotated
 from app.utils.S3 import s3_client
-from app.tasks.tasks import delete_file_from_s3, send_report, delete_file_admin
+from app.tasks.tasks import delete_file_from_s3
 from exceptions import NotAccessException, UserNotFoundException, FileNotFoundException
 from config import settings
 from redis.asyncio import Redis
+from uuid import uuid4, UUID
+from datetime import datetime, timedelta, timezone
+
 
 
 main_router: APIRouter = APIRouter(tags=['Главная страница'])
 
 
 TYPE_CONTENT: list[str] = ['video', 'audio', 'image']
-IP_ADMINS: list[str] = settings.ip_admins.split(',')
 
 
 @main_router.get('/')
 async def get_main_page(
         request: Request, 
+        response: Response,
         template: Annotated[Jinja2Templates, Depends(get_template)],
         user_service: Annotated[UserService, Depends(get_user_service)],
         file_service: Annotated[FileService, Depends(get_file_service)],
@@ -32,21 +35,37 @@ async def get_main_page(
     ):
 
 
-    ip_address: str = request.client.host
-    user: UserOut | None = await user_service.get_user(ip_address=ip_address)
+    cookie_uuid: str = request.cookies.get('cookie_uuid')
     total_pages: int = 0
-    
-    if user:
-        offset: int = (page - 1) * 15
-        user_files, total_count = await file_service.get_all(user_id=user.id, offset=offset)
-        total_pages: int = (total_count + 15 - 1) // 15
+    if cookie_uuid:
+        user: UserOut | None = await user_service.get_user(cookie_uuid=cookie_uuid)
+        
+        if user:
+            offset: int = (page - 1) * 15
+            user_files, total_count = await file_service.get_all(user_id=user.id, offset=offset)
+            total_pages: int = (total_count + 15 - 1) // 15
 
+            return template.TemplateResponse(
+                request=request, 
+                name='base.html', 
+                context={'user_files': user_files, 'current_page': page, 'total_pages': total_pages})
         return template.TemplateResponse(
-            request=request, 
-            name='base.html', 
-            context={'user_files': user_files, 'current_page': page, 'total_pages': total_pages})
-    
-    return template.TemplateResponse(request=request, name='base.html', context={'user_files': [], 'total_pages': total_pages})
+                    request=request, 
+                    name='base.html', 
+                    context={'user_files': [], 'total_pages': total_pages}, 
+                )
+    else:
+        new_uuid: UUID = uuid4()
+        response = template.TemplateResponse(
+                    request=request, 
+                    name='base.html', 
+                    context={'user_files': [], 'total_pages': total_pages}, 
+                )
+        current_date: datetime = datetime.now(timezone.utc) + timedelta(days=2000)
+        response.set_cookie(key='cookie_uuid', value=str(new_uuid), httponly=True, expires=current_date)
+        await user_service.create(cookie_uuid=str(new_uuid))
+        return response
+
 
 
    
@@ -60,7 +79,6 @@ async def get_main_page(
     ):
 
     file = await file_service.get_one_with_cache(file_url)
-
     if file:
         file_content: str = file.content_type.split('/')[0]
 
@@ -88,9 +106,9 @@ async def delete_file(
         bg_task: BackgroundTasks
     ):
 
-    ip_address: str = request.client.host
+    cookie_uuid: str = request.cookies.get('cookie_uuid')
 
-    user: UserOut = await user_service.get_user(ip_address=ip_address)
+    user: UserOut = await user_service.get_user(cookie_uuid=cookie_uuid)
     file: FileSchemaOut = await file_service.get_one(id=file_id)
 
     if not file:
@@ -109,23 +127,3 @@ async def delete_file(
         delete_file_from_s3,
         filename
     )
-    
-    
-# @main_router.post('/report/{file_id}')
-# async def report_file(
-#         file_id: Annotated[int, Path()],
-#         file_service: Annotated[FileService, Depends(get_file_service)],
-#         bg_task: BackgroundTasks
-#     ):
-
-#     file: FileSchemaOut | None = await file_service.get_one(id=file_id)
-
-#     if file:
-#         file_url: str = f'{settings.url}/{file.url}_{file.filename}'
-#         bg_task.add_task(
-#             send_report,
-#             file_id=file.id,
-#             file_url=file_url
-#         )
-#     else:
-#         raise FileNotFoundException
