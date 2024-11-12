@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert, delete, select
 from logger import logger
 from sqlalchemy.exc import SQLAlchemyError
+import asyncio
+from app.tasks.tasks import new_error
 
 
 
@@ -24,6 +26,8 @@ class SQLAlchemyRepository(AbstractRepository):
             logger.error(
                 'Ошибка при добавлении записи в базу данных', extra={'данные': data, 'ошибка': e}
             )
+            asyncio.create_task(new_error(text=f'Ошибка при добавлении записи в базу данных', extra={'данные': data, 'ошибка': e}))
+            raise e
 
 
     async def find_one_or_none(self, **filter_by):
@@ -33,6 +37,8 @@ class SQLAlchemyRepository(AbstractRepository):
             return res.scalar_one_or_none()
         except (SQLAlchemyError, Exception) as e:
             logger.error(f'Ошибка при поиске значения в базе данных', extra={'ошибка': e})
+            asyncio.create_task(new_error(text=f'Ошибка при поиске записи в базе данных, "ошибка": {e}'))
+            raise e
 
 
     async def find_all(self, **filter_by):
@@ -42,6 +48,8 @@ class SQLAlchemyRepository(AbstractRepository):
             return res.scalar_one_or_none()
         except (SQLAlchemyError, Exception) as e:
             logger.error(f'Ошибка при поиске всех значений в базе данных', extra={'ошибка': e})
+            asyncio.create_task(new_error(text=f'Ошибка при поиске всех значений, "ошибка": {e}'))
+            raise e
 
     async def delete(self, id: int) -> int:
         try:
@@ -50,3 +58,5 @@ class SQLAlchemyRepository(AbstractRepository):
             await self.session.commit()
         except (SQLAlchemyError, Exception) as e:
             logger.error(f'Ошибка при удалении значения из базы данных', extra={'ошибка': e})
+            asyncio.create_task(new_error(text=f'Ошибка при удалении записи с базы данных, "ошибка": {e}'))
+            raise e
