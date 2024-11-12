@@ -2,6 +2,8 @@ from app.repositories.file import FileRepository
 from redis.asyncio import Redis
 from app.schemas.file import FileSchema, FileSchemaOut
 from logger import logger
+import asyncio
+from app.tasks.tasks import new_error
 
 
 
@@ -31,6 +33,7 @@ class FileService:
                     return FileSchemaOut.model_validate_json(cached_data)
             except Exception as e:
                 logger.error('Не удалось получить кэш')
+                asyncio.create_task(new_error(text='Не удалось получить кэш'))
 
         file: FileSchemaOut | None = await self.repository.find_one_or_none(url=file_url)
         if file:
@@ -41,6 +44,7 @@ class FileService:
                     await self.redis.set(file_url, file_json, ex=3600)
                 except Exception as e:
                     logger.error('Не удалось записать файл в кэш', e)
+                    asyncio.create_task(new_error(text=f'Не удалось записать файл в кэш" {e}'))
 
             return FileSchemaOut.model_validate(file)
         return None

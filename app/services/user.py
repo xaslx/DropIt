@@ -3,6 +3,10 @@ from redis.asyncio import Redis
 from redis.exceptions import RedisError
 from app.schemas.user import UserOut
 from logger import logger
+import asyncio
+from app.tasks.tasks import new_error
+
+
 
 
 class UserService:
@@ -26,6 +30,7 @@ class UserService:
                     return UserOut(id=int(cached_data_user), cookie_uuid=cookie_uuid)
             except RedisError:
                 logger.error('Ошибка получения кэша')
+                asyncio.create_task(new_error(text='Ошибка получения кэша'))
 
         user: UserOut | None = await self.repository.find_one_or_none(cookie_uuid=cookie_uuid)
         if user and self.redis:
@@ -33,6 +38,7 @@ class UserService:
                 await self.redis.set(cookie_uuid, user.id, ex=86400)
             except RedisError:
                 logger.error('Не удалось добавить пользователя в кэш')
+                asyncio.create_task(new_error(text='Не удалось добавить пользователя в кэш'))
 
         return user
  
