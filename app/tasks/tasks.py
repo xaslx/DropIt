@@ -21,16 +21,15 @@ async def new_error(text: str):
     )
 
 
-
-
-async def add_new_file(file_id: int, file_url: str):
+async def add_new_file(file_id: int, file_size: float, file_url: str):
     await bot.send_message(
         chat_id=settings.id_admins_telegram,
         text=
         '✅ #новый_файл\n\n'
         f'Добавлен новый файл\n\n'
         f'file_id: {file_id}\n\n'
-        f'file_url: {file_url}'
+        f'file_url: {file_url}\n\n'
+        f'Размер: {file_size}'
     )
 
 
